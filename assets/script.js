@@ -6,7 +6,8 @@
  * 2. Bookmark Manager
  * 3. Quiz App
  *
- * Semua data disimpan menggunakan localStorage.
+ * Data fitur (expense, bookmark, quiz high score) disimpan di localStorage.
+ * Tab aktif TIDAK disimpan di localStorage — dikelola lewat query URL (?tab=...).
  */
 
 
@@ -30,12 +31,107 @@ function formatRupiah(number) {
     }).format(number);
 }
 
+function shuffleArray(array) {
+
+    const result = [...array];
+
+    for (let i = result.length - 1; i > 0; i--) {
+
+        const j = Math.floor(Math.random() * (i + 1));
+
+        [result[i], result[j]] = [result[j], result[i]];
+
+    }
+
+    return result;
+}
+
 
 /* =========================================================
-   TAB NAVIGATION
+   STORAGE HELPER GENERIK
+   (dipakai bareng oleh Expense & Bookmark agar tidak duplikasi
+   logika load/save + try-catch)
 ========================================================= */
 
-const TAB_STORAGE_KEY = "pabwe-p3-active-tab";
+function createStorage(key) {
+
+    return {
+
+        load() {
+
+            try {
+
+                const data = localStorage.getItem(key);
+
+                return data ? JSON.parse(data) : [];
+
+            } catch (error) {
+
+                return [];
+
+            }
+
+        },
+
+        save(data) {
+
+            localStorage.setItem(key, JSON.stringify(data));
+
+        }
+
+    };
+
+}
+
+
+/* =========================================================
+   VALIDASI HELPER GENERIK
+   (dipakai bareng oleh form tambah & form edit, untuk Expense
+   maupun Bookmark, agar tidak duplikasi logika validasi)
+========================================================= */
+
+function validateExpenseInput({ title, category, amount, date }) {
+
+    if (!title ||
+        !category ||
+        !date ||
+        !Number.isFinite(amount) ||
+        amount <= 0) {
+
+        return "Semua field wajib diisi dan jumlah harus lebih dari 0.";
+
+    }
+
+    return null;
+}
+
+function isValidURL(url) {
+
+    return /^https?:\/\//i.test(url);
+
+}
+
+function validateBookmarkInput({ title, url, category }) {
+
+    if (!title || !url || !category) {
+
+        return "Nama, URL, dan kategori wajib diisi.";
+
+    }
+
+    if (!isValidURL(url)) {
+
+        return "URL harus diawali http:// atau https://.";
+
+    }
+
+    return null;
+}
+
+
+/* =========================================================
+   TAB NAVIGATION (state dikelola lewat query URL)
+========================================================= */
 
 const tabButtons = $all(".tab-btn");
 
@@ -46,7 +142,18 @@ const panels = {
 };
 
 
-function switchTab(tabName) {
+function getTabFromURL() {
+
+    const params = new URLSearchParams(window.location.search);
+
+    const tab = params.get("tab");
+
+    return panels[tab] ? tab : "expense";
+
+}
+
+
+function switchTab(tabName, { updateURL = true, method = "push" } = {}) {
 
     if (!panels[tabName]) {
         tabName = "expense";
@@ -95,10 +202,27 @@ function switchTab(tabName) {
     });
 
 
-    localStorage.setItem(
-        TAB_STORAGE_KEY,
-        tabName
-    );
+    if (updateURL) {
+
+        const params = new URLSearchParams(window.location.search);
+
+        params.set("tab", tabName);
+
+        const newURL =
+            `${window.location.pathname}?${params.toString()}${window.location.hash}`;
+
+        if (method === "replace") {
+
+            history.replaceState({ tab: tabName }, "", newURL);
+
+        } else {
+
+            history.pushState({ tab: tabName }, "", newURL);
+
+        }
+
+    }
+
 }
 
 
@@ -106,17 +230,24 @@ tabButtons.forEach((button) => {
 
     button.addEventListener("click", () => {
 
-        switchTab(button.dataset.tab);
+        switchTab(button.dataset.tab, { updateURL: true, method: "push" });
 
     });
 
 });
 
 
-const savedTab =
-    localStorage.getItem(TAB_STORAGE_KEY) || "expense";
+// Dukung tombol back/forward browser
+window.addEventListener("popstate", () => {
 
-switchTab(savedTab);
+    switchTab(getTabFromURL(), { updateURL: false });
+
+});
+
+
+// Inisialisasi tab dari query URL saat halaman pertama dimuat
+// (pakai replaceState agar tidak menambah entry history baru)
+switchTab(getTabFromURL(), { updateURL: true, method: "replace" });
 
 
 
@@ -124,9 +255,9 @@ switchTab(savedTab);
    EXPENSE TRACKER
 ========================================================= */
 
-const EXPENSE_STORAGE_KEY = "pabwe-p3-expenses";
+const expenseStorage = createStorage("pabwe-p3-expenses");
 
-let expenses = loadExpenses();
+let expenses = expenseStorage.load();
 
 let editingExpenseId = null;
 let deletingExpenseId = null;
@@ -167,35 +298,6 @@ const editExpenseCategory = $("#edit-expense-category");
 const editExpenseAmount = $("#edit-expense-amount");
 const editExpenseType = $("#edit-expense-type");
 const editExpenseDate = $("#edit-expense-date");
-
-
-/* ---------- Load / Save ---------- */
-
-function loadExpenses() {
-
-    try {
-
-        const data =
-            localStorage.getItem(EXPENSE_STORAGE_KEY);
-
-        return data ? JSON.parse(data) : [];
-
-    } catch (error) {
-
-        return [];
-
-    }
-}
-
-
-function saveExpenses() {
-
-    localStorage.setItem(
-        EXPENSE_STORAGE_KEY,
-        JSON.stringify(expenses)
-    );
-
-}
 
 
 /* ---------- Ringkasan ---------- */
@@ -428,15 +530,12 @@ expenseForm.addEventListener("submit", (event) => {
         expenseDate.value;
 
 
-    if (!title ||
-        !category ||
-        !date ||
-        !Number.isFinite(amount) ||
-        amount <= 0) {
+    const errorMessage =
+        validateExpenseInput({ title, category, amount, date });
 
-        alert(
-            "Semua field wajib diisi dan jumlah harus lebih dari 0."
-        );
+    if (errorMessage) {
+
+        alert(errorMessage);
 
         return;
 
@@ -462,7 +561,7 @@ expenseForm.addEventListener("submit", (event) => {
 
     expenses.push(newExpense);
 
-    saveExpenses();
+    expenseStorage.save(expenses);
 
     renderExpenses();
 
@@ -590,15 +689,12 @@ expenseEditForm.addEventListener(
             editExpenseDate.value;
 
 
-        if (!title ||
-            !category ||
-            !date ||
-            !Number.isFinite(amount) ||
-            amount <= 0) {
+        const errorMessage =
+            validateExpenseInput({ title, category, amount, date });
 
-            alert(
-                "Data tidak valid."
-            );
+        if (errorMessage) {
+
+            alert(errorMessage);
 
             return;
 
@@ -623,7 +719,7 @@ expenseEditForm.addEventListener(
         }
 
 
-        saveExpenses();
+        expenseStorage.save(expenses);
 
         renderExpenses();
 
@@ -673,7 +769,7 @@ $("#confirm-expense-delete")
             );
 
 
-        saveExpenses();
+        expenseStorage.save(expenses);
 
         renderExpenses();
 
@@ -694,10 +790,9 @@ $("#confirm-expense-delete")
    BOOKMARK MANAGER
 ========================================================= */
 
-const BOOKMARK_STORAGE_KEY =
-    "pabwe-p3-bookmarks";
+const bookmarkStorage = createStorage("pabwe-p3-bookmarks");
 
-let bookmarks = loadBookmarks();
+let bookmarks = bookmarkStorage.load();
 
 let editingBookmarkId = null;
 let deletingBookmarkId = null;
@@ -755,47 +850,6 @@ const editBookmarkCategory =
 
 const editBookmarkNote =
     $("#edit-bookmark-note");
-
-
-/* ---------- Load / Save ---------- */
-
-function loadBookmarks() {
-
-    try {
-
-        const data =
-            localStorage.getItem(
-                BOOKMARK_STORAGE_KEY
-            );
-
-        return data ? JSON.parse(data) : [];
-
-    } catch (error) {
-
-        return [];
-
-    }
-
-}
-
-
-function saveBookmarks() {
-
-    localStorage.setItem(
-        BOOKMARK_STORAGE_KEY,
-        JSON.stringify(bookmarks)
-    );
-
-}
-
-
-/* ---------- Validasi URL ---------- */
-
-function isValidURL(url) {
-
-    return /^https?:\/\//i.test(url);
-
-}
 
 
 /* ---------- Render Bookmark ---------- */
@@ -996,24 +1050,12 @@ bookmarkForm.addEventListener(
             bookmarkNote.value.trim();
 
 
-        if (!title ||
-            !url ||
-            !category) {
+        const errorMessage =
+            validateBookmarkInput({ title, url, category });
 
-            alert(
-                "Nama, URL, dan kategori wajib diisi."
-            );
+        if (errorMessage) {
 
-            return;
-
-        }
-
-
-        if (!isValidURL(url)) {
-
-            alert(
-                "URL harus diawali http:// atau https://."
-            );
+            alert(errorMessage);
 
             return;
 
@@ -1039,7 +1081,7 @@ bookmarkForm.addEventListener(
 
         bookmarks.push(newBookmark);
 
-        saveBookmarks();
+        bookmarkStorage.save(bookmarks);
 
         renderBookmarks();
 
@@ -1161,24 +1203,12 @@ bookmarkEditForm.addEventListener(
             editBookmarkNote.value.trim();
 
 
-        if (!title ||
-            !url ||
-            !category) {
+        const errorMessage =
+            validateBookmarkInput({ title, url, category });
 
-            alert(
-                "Nama, URL, dan kategori wajib diisi."
-            );
+        if (errorMessage) {
 
-            return;
-
-        }
-
-
-        if (!isValidURL(url)) {
-
-            alert(
-                "URL harus diawali http:// atau https://."
-            );
+            alert(errorMessage);
 
             return;
 
@@ -1202,7 +1232,7 @@ bookmarkEditForm.addEventListener(
         }
 
 
-        saveBookmarks();
+        bookmarkStorage.save(bookmarks);
 
         renderBookmarks();
 
@@ -1253,7 +1283,7 @@ $("#confirm-bookmark-delete")
                 );
 
 
-            saveBookmarks();
+            bookmarkStorage.save(bookmarks);
 
             renderBookmarks();
 
@@ -1277,6 +1307,8 @@ const QUIZ_HIGH_SCORE_KEY =
     "pabwe-p3-quiz-high-score";
 
 
+// Data soal (posisi jawaban benar di sini tidak penting lagi,
+// karena opsi akan diacak tiap kali quiz dimulai — lihat getShuffledQuestions())
 const questions = [
 
     {
@@ -1355,6 +1387,35 @@ const questions = [
 
 ];
 
+
+// Mengacak posisi opsi jawaban tiap soal, agar jawaban benar
+// tidak selalu berada di index 0 (dipanggil ulang tiap quiz dimulai)
+function getShuffledQuestions() {
+
+    return questions.map((item) => {
+
+        const correctText =
+            item.options[item.answer];
+
+        const shuffledOptions =
+            shuffleArray(item.options);
+
+        return {
+
+            question: item.question,
+
+            options: shuffledOptions,
+
+            answer: shuffledOptions.indexOf(correctText)
+
+        };
+
+    });
+
+}
+
+
+let activeQuestions = questions;
 
 let currentQuestion = 0;
 let quizScore = 0;
@@ -1437,6 +1498,9 @@ function updateHighScoreDisplay() {
 
 function startQuizGame() {
 
+    activeQuestions =
+        getShuffledQuestions();
+
     currentQuestion = 0;
 
     quizScore = 0;
@@ -1474,14 +1538,14 @@ restartQuiz.addEventListener(
 function renderQuestion() {
 
     const question =
-        questions[currentQuestion];
+        activeQuestions[currentQuestion];
 
 
     answered = false;
 
 
     quizNumber.textContent =
-        `Soal ${currentQuestion + 1} / ${questions.length}`;
+        `Soal ${currentQuestion + 1} / ${activeQuestions.length}`;
 
 
     quizScoreElement.textContent =
@@ -1549,7 +1613,7 @@ function selectAnswer(selectedIndex) {
 
 
     const question =
-        questions[currentQuestion];
+        activeQuestions[currentQuestion];
 
 
     const buttons =
@@ -1613,7 +1677,7 @@ nextQuestion.addEventListener(
 
         if (
             currentQuestion >=
-            questions.length
+            activeQuestions.length
         ) {
 
             finishQuiz();
@@ -1643,7 +1707,7 @@ function finishQuiz() {
 
 
     finalScore.textContent =
-        `${quizScore} / ${questions.length}`;
+        `${quizScore} / ${activeQuestions.length}`;
 
 
     const oldHighScore =
