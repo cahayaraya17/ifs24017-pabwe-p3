@@ -1,0 +1,942 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Praktikum 3 - JavaScript</title>
+
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <style>
+        body {
+            background-color: #f8fafc;
+        }
+
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+
+<body class="text-slate-800">
+
+    <header class="bg-sky-600 text-white">
+        <div class="max-w-6xl mx-auto px-4 py-6">
+            <h1 class="text-3xl font-bold">
+                Praktikum JavaScript
+            </h1>
+
+            <p class="mt-1 text-sky-100">
+                Expense Tracker, Bookmark Manager, dan Quiz App
+            </p>
+        </div>
+    </header>
+
+    <main class="max-w-6xl mx-auto px-4 py-8">
+
+        <!-- TAB NAVIGATION -->
+        <div class="flex flex-wrap gap-2 mb-6">
+
+            <button
+                type="button"
+                class="tab-btn px-4 py-2 rounded-lg bg-sky-600 text-white font-semibold"
+                data-tab="expense"
+                aria-selected="true">
+                Expense Tracker
+            </button>
+
+            <button
+                type="button"
+                class="tab-btn px-4 py-2 rounded-lg bg-white text-slate-600 font-semibold border"
+                data-tab="bookmark"
+                aria-selected="false">
+                Bookmark Manager
+            </button>
+
+            <button
+                type="button"
+                class="tab-btn px-4 py-2 rounded-lg bg-white text-slate-600 font-semibold border"
+                data-tab="quiz"
+                aria-selected="false">
+                Quiz App
+            </button>
+
+        </div>
+
+
+        <!-- =====================================================
+             EXPENSE TRACKER
+        ====================================================== -->
+
+        <section id="panel-expense" class="bg-white rounded-2xl shadow p-6">
+
+            <div class="mb-6">
+                <h2 class="text-2xl font-bold">
+                    Catatan Pengeluaran Harian
+                </h2>
+
+                <p class="text-slate-500 mt-1">
+                    Kelola pemasukan dan pengeluaran harian.
+                </p>
+            </div>
+
+
+            <!-- RINGKASAN -->
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+
+                <div class="rounded-xl bg-emerald-50 p-4">
+                    <p class="text-sm text-emerald-700">
+                        Total Pemasukan
+                    </p>
+
+                    <p
+                        id="total-income"
+                        class="text-2xl font-bold text-emerald-700">
+                        Rp0
+                    </p>
+                </div>
+
+
+                <div class="rounded-xl bg-rose-50 p-4">
+                    <p class="text-sm text-rose-700">
+                        Total Pengeluaran
+                    </p>
+
+                    <p
+                        id="total-expense"
+                        class="text-2xl font-bold text-rose-700">
+                        Rp0
+                    </p>
+                </div>
+
+
+                <div class="rounded-xl bg-sky-50 p-4">
+                    <p class="text-sm text-sky-700">
+                        Saldo
+                    </p>
+
+                    <p
+                        id="total-balance"
+                        class="text-2xl font-bold text-sky-700">
+                        Rp0
+                    </p>
+                </div>
+
+            </div>
+
+
+            <!-- FORM TRANSAKSI -->
+
+            <form
+                id="expense-form"
+                class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+
+                <div>
+                    <label class="block text-sm font-semibold mb-1">
+                        Judul / Deskripsi
+                    </label>
+
+                    <input
+                        type="text"
+                        id="expense-title"
+                        class="w-full border rounded-lg px-3 py-2"
+                        placeholder="Contoh: Makan siang"
+                        required>
+                </div>
+
+
+                <div>
+                    <label class="block text-sm font-semibold mb-1">
+                        Kategori
+                    </label>
+
+                    <select
+                        id="expense-category"
+                        class="w-full border rounded-lg px-3 py-2"
+                        required>
+
+                        <option value="">
+                            Pilih kategori
+                        </option>
+
+                        <option value="Makanan">
+                            Makanan
+                        </option>
+
+                        <option value="Transportasi">
+                            Transportasi
+                        </option>
+
+                        <option value="Pendidikan">
+                            Pendidikan
+                        </option>
+
+                        <option value="Hiburan">
+                            Hiburan
+                        </option>
+
+                        <option value="Lainnya">
+                            Lainnya
+                        </option>
+
+                    </select>
+                </div>
+
+
+                <div>
+                    <label class="block text-sm font-semibold mb-1">
+                        Jumlah
+                    </label>
+
+                    <input
+                        type="number"
+                        id="expense-amount"
+                        class="w-full border rounded-lg px-3 py-2"
+                        placeholder="50000"
+                        min="1"
+                        required>
+                </div>
+
+
+                <div>
+                    <label class="block text-sm font-semibold mb-1">
+                        Tipe
+                    </label>
+
+                    <select
+                        id="expense-type"
+                        class="w-full border rounded-lg px-3 py-2"
+                        required>
+
+                        <option value="Pengeluaran">
+                            Pengeluaran
+                        </option>
+
+                        <option value="Pemasukan">
+                            Pemasukan
+                        </option>
+
+                    </select>
+                </div>
+
+
+                <div>
+                    <label class="block text-sm font-semibold mb-1">
+                        Tanggal
+                    </label>
+
+                    <input
+                        type="date"
+                        id="expense-date"
+                        class="w-full border rounded-lg px-3 py-2"
+                        required>
+                </div>
+
+
+                <div class="flex items-end">
+
+                    <button
+                        type="submit"
+                        class="w-full bg-sky-600 hover:bg-sky-700 text-white font-semibold rounded-lg px-4 py-2">
+
+                        Tambah Transaksi
+
+                    </button>
+
+                </div>
+
+            </form>
+
+
+            <!-- SEARCH FILTER SORT -->
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-3 mb-5">
+
+                <input
+                    type="search"
+                    id="expense-search"
+                    class="border rounded-lg px-3 py-2"
+                    placeholder="Cari transaksi...">
+
+
+                <select
+                    id="expense-filter-type"
+                    class="border rounded-lg px-3 py-2">
+
+                    <option value="Semua">
+                        Semua Tipe
+                    </option>
+
+                    <option value="Pemasukan">
+                        Pemasukan
+                    </option>
+
+                    <option value="Pengeluaran">
+                        Pengeluaran
+                    </option>
+
+                </select>
+
+
+                <select
+                    id="expense-sort"
+                    class="border rounded-lg px-3 py-2">
+
+                    <option value="newest">
+                        Terbaru
+                    </option>
+
+                    <option value="oldest">
+                        Terlama
+                    </option>
+
+                    <option value="highest">
+                        Jumlah Terbesar
+                    </option>
+
+                    <option value="lowest">
+                        Jumlah Terkecil
+                    </option>
+
+                </select>
+
+            </div>
+
+
+            <!-- EMPTY STATE -->
+
+            <div
+                id="expense-empty"
+                class="hidden text-center py-10 text-slate-500">
+
+                Belum ada transaksi.
+
+            </div>
+
+
+            <!-- TRANSACTION LIST -->
+
+            <div id="expense-list" class="space-y-3"></div>
+
+        </section>
+
+
+
+        <!-- =====================================================
+             BOOKMARK MANAGER
+        ====================================================== -->
+
+        <section
+            id="panel-bookmark"
+            class="hidden bg-white rounded-2xl shadow p-6">
+
+            <div class="mb-6">
+
+                <h2 class="text-2xl font-bold">
+                    Bookmark / Link Manager
+                </h2>
+
+                <p class="text-slate-500 mt-1">
+                    Simpan dan kelola tautan favorit.
+                </p>
+
+            </div>
+
+
+            <!-- FORM BOOKMARK -->
+
+            <form
+                id="bookmark-form"
+                class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+
+                <div>
+
+                    <label class="block text-sm font-semibold mb-1">
+                        Nama / Judul
+                    </label>
+
+                    <input
+                        type="text"
+                        id="bookmark-title"
+                        class="w-full border rounded-lg px-3 py-2"
+                        placeholder="Contoh: W3Schools"
+                        required>
+
+                </div>
+
+
+                <div>
+
+                    <label class="block text-sm font-semibold mb-1">
+                        URL
+                    </label>
+
+                    <input
+                        type="url"
+                        id="bookmark-url"
+                        class="w-full border rounded-lg px-3 py-2"
+                        placeholder="https://example.com"
+                        required>
+
+                </div>
+
+
+                <div>
+
+                    <label class="block text-sm font-semibold mb-1">
+                        Kategori / Tag
+                    </label>
+
+                    <input
+                        type="text"
+                        id="bookmark-category"
+                        class="w-full border rounded-lg px-3 py-2"
+                        placeholder="Belajar"
+                        required>
+
+                </div>
+
+
+                <div>
+
+                    <label class="block text-sm font-semibold mb-1">
+                        Catatan
+                    </label>
+
+                    <input
+                        type="text"
+                        id="bookmark-note"
+                        class="w-full border rounded-lg px-3 py-2"
+                        placeholder="Catatan singkat">
+
+                </div>
+
+
+                <div class="md:col-span-2">
+
+                    <button
+                        type="submit"
+                        class="w-full bg-sky-600 hover:bg-sky-700 text-white font-semibold rounded-lg px-4 py-2">
+
+                        Tambah Bookmark
+
+                    </button>
+
+                </div>
+
+            </form>
+
+
+            <!-- SEARCH & SORT -->
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-5">
+
+                <input
+                    type="search"
+                    id="bookmark-search"
+                    class="border rounded-lg px-3 py-2"
+                    placeholder="Cari nama, URL, atau kategori...">
+
+
+                <select
+                    id="bookmark-sort"
+                    class="border rounded-lg px-3 py-2">
+
+                    <option value="newest">
+                        Terbaru
+                    </option>
+
+                    <option value="title-asc">
+                        Judul A-Z
+                    </option>
+
+                    <option value="title-desc">
+                        Judul Z-A
+                    </option>
+
+                </select>
+
+            </div>
+
+
+            <div
+                id="bookmark-empty"
+                class="text-center py-10 text-slate-500">
+
+                Belum ada bookmark.
+
+            </div>
+
+
+            <div id="bookmark-list" class="space-y-3"></div>
+
+        </section>
+
+
+
+        <!-- =====================================================
+             QUIZ APP
+        ====================================================== -->
+
+        <section
+            id="panel-quiz"
+            class="hidden bg-white rounded-2xl shadow p-6">
+
+            <div class="mb-6">
+
+                <h2 class="text-2xl font-bold">
+                    Kuis Interaktif
+                </h2>
+
+                <p class="text-slate-500 mt-1">
+                    Uji pengetahuan dasar HTML, CSS, dan JavaScript.
+                </p>
+
+            </div>
+
+
+            <!-- START SCREEN -->
+
+            <div id="quiz-start" class="text-center py-8">
+
+                <p class="mb-4">
+                    Kuis terdiri dari 5 soal.
+                </p>
+
+                <button
+                    id="start-quiz"
+                    type="button"
+                    class="bg-sky-600 hover:bg-sky-700 text-white font-semibold rounded-lg px-6 py-3">
+
+                    Mulai Kuis
+
+                </button>
+
+                <p class="mt-4 text-slate-500">
+                    High Score:
+                    <span id="high-score-start">0</span>
+                </p>
+
+            </div>
+
+
+            <!-- QUESTION -->
+
+            <div id="quiz-question" class="hidden">
+
+                <div class="flex justify-between mb-4">
+
+                    <span
+                        id="quiz-number"
+                        class="font-semibold">
+                        Soal 1 / 5
+                    </span>
+
+                    <span
+                        id="quiz-score"
+                        class="font-semibold">
+                        Skor: 0
+                    </span>
+
+                </div>
+
+
+                <div class="bg-slate-50 rounded-xl p-5 mb-5">
+
+                    <h3
+                        id="question-text"
+                        class="text-xl font-bold">
+                    </h3>
+
+                </div>
+
+
+                <div
+                    id="answer-options"
+                    class="grid gap-3">
+                </div>
+
+
+                <div
+                    id="quiz-feedback"
+                    class="mt-5 font-semibold">
+                </div>
+
+
+                <button
+                    id="next-question"
+                    type="button"
+                    class="hidden mt-5 bg-sky-600 text-white px-5 py-2 rounded-lg">
+
+                    Soal Berikutnya
+
+                </button>
+
+            </div>
+
+
+            <!-- RESULT -->
+
+            <div
+                id="quiz-result"
+                class="hidden text-center py-8">
+
+                <h3 class="text-3xl font-bold mb-4">
+                    Kuis Selesai!
+                </h3>
+
+                <p class="text-lg">
+                    Skor kamu:
+                </p>
+
+                <p
+                    id="final-score"
+                    class="text-4xl font-bold text-sky-600 my-3">
+                    0 / 5
+                </p>
+
+                <p>
+                    High Score:
+                    <span
+                        id="high-score-result"
+                        class="font-bold">
+                        0
+                    </span>
+                </p>
+
+                <button
+                    id="restart-quiz"
+                    type="button"
+                    class="mt-5 bg-sky-600 hover:bg-sky-700 text-white font-semibold rounded-lg px-6 py-3">
+
+                    Main Lagi
+
+                </button>
+
+            </div>
+
+        </section>
+
+    </main>
+
+
+
+    <!-- =====================================================
+         MODAL EDIT EXPENSE
+    ====================================================== -->
+
+    <div
+        id="expense-modal"
+        class="hidden fixed inset-0 bg-black/50 flex items-center justify-center px-4">
+
+        <div class="bg-white rounded-2xl p-6 w-full max-w-md">
+
+            <h3 class="text-xl font-bold mb-4">
+                Ubah Transaksi
+            </h3>
+
+            <form id="expense-edit-form">
+
+                <input
+                    type="hidden"
+                    id="edit-expense-id">
+
+
+                <div class="mb-3">
+
+                    <label class="block text-sm font-semibold mb-1">
+                        Judul
+                    </label>
+
+                    <input
+                        type="text"
+                        id="edit-expense-title"
+                        class="w-full border rounded-lg px-3 py-2"
+                        required>
+
+                </div>
+
+
+                <div class="mb-3">
+
+                    <label class="block text-sm font-semibold mb-1">
+                        Kategori
+                    </label>
+
+                    <select
+                        id="edit-expense-category"
+                        class="w-full border rounded-lg px-3 py-2"
+                        required>
+
+                        <option value="Makanan">Makanan</option>
+                        <option value="Transportasi">Transportasi</option>
+                        <option value="Pendidikan">Pendidikan</option>
+                        <option value="Hiburan">Hiburan</option>
+                        <option value="Lainnya">Lainnya</option>
+
+                    </select>
+
+                </div>
+
+
+                <div class="mb-3">
+
+                    <label class="block text-sm font-semibold mb-1">
+                        Jumlah
+                    </label>
+
+                    <input
+                        type="number"
+                        id="edit-expense-amount"
+                        class="w-full border rounded-lg px-3 py-2"
+                        min="1"
+                        required>
+
+                </div>
+
+
+                <div class="mb-3">
+
+                    <label class="block text-sm font-semibold mb-1">
+                        Tipe
+                    </label>
+
+                    <select
+                        id="edit-expense-type"
+                        class="w-full border rounded-lg px-3 py-2">
+
+                        <option value="Pemasukan">
+                            Pemasukan
+                        </option>
+
+                        <option value="Pengeluaran">
+                            Pengeluaran
+                        </option>
+
+                    </select>
+
+                </div>
+
+
+                <div class="mb-4">
+
+                    <label class="block text-sm font-semibold mb-1">
+                        Tanggal
+                    </label>
+
+                    <input
+                        type="date"
+                        id="edit-expense-date"
+                        class="w-full border rounded-lg px-3 py-2"
+                        required>
+
+                </div>
+
+
+                <div class="flex gap-2">
+
+                    <button
+                        type="button"
+                        id="cancel-expense-edit"
+                        class="flex-1 border rounded-lg px-4 py-2">
+
+                        Batal
+
+                    </button>
+
+                    <button
+                        type="submit"
+                        class="flex-1 bg-sky-600 text-white rounded-lg px-4 py-2">
+
+                        Simpan
+
+                    </button>
+
+                </div>
+
+            </form>
+
+        </div>
+
+    </div>
+
+
+
+    <!-- =====================================================
+         MODAL DELETE EXPENSE
+    ====================================================== -->
+
+    <div
+        id="delete-expense-modal"
+        class="hidden fixed inset-0 bg-black/50 flex items-center justify-center px-4">
+
+        <div class="bg-white rounded-2xl p-6 w-full max-w-md">
+
+            <h3 class="text-xl font-bold mb-3">
+                Hapus Transaksi
+            </h3>
+
+            <p class="text-slate-600 mb-5">
+                Apakah kamu yakin ingin menghapus transaksi ini?
+            </p>
+
+            <div class="flex gap-2">
+
+                <button
+                    id="cancel-expense-delete"
+                    type="button"
+                    class="flex-1 border rounded-lg px-4 py-2">
+
+                    Batal
+
+                </button>
+
+                <button
+                    id="confirm-expense-delete"
+                    type="button"
+                    class="flex-1 bg-rose-600 text-white rounded-lg px-4 py-2">
+
+                    Hapus
+
+                </button>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+
+    <!-- =====================================================
+         MODAL EDIT BOOKMARK
+    ====================================================== -->
+
+    <div
+        id="bookmark-modal"
+        class="hidden fixed inset-0 bg-black/50 flex items-center justify-center px-4">
+
+        <div class="bg-white rounded-2xl p-6 w-full max-w-md">
+
+            <h3 class="text-xl font-bold mb-4">
+                Ubah Bookmark
+            </h3>
+
+            <form id="bookmark-edit-form">
+
+                <input
+                    type="hidden"
+                    id="edit-bookmark-id">
+
+
+                <input
+                    type="text"
+                    id="edit-bookmark-title"
+                    class="w-full border rounded-lg px-3 py-2 mb-3"
+                    placeholder="Judul"
+                    required>
+
+
+                <input
+                    type="url"
+                    id="edit-bookmark-url"
+                    class="w-full border rounded-lg px-3 py-2 mb-3"
+                    placeholder="URL"
+                    required>
+
+
+                <input
+                    type="text"
+                    id="edit-bookmark-category"
+                    class="w-full border rounded-lg px-3 py-2 mb-3"
+                    placeholder="Kategori"
+                    required>
+
+
+                <input
+                    type="text"
+                    id="edit-bookmark-note"
+                    class="w-full border rounded-lg px-3 py-2 mb-4"
+                    placeholder="Catatan">
+
+
+                <div class="flex gap-2">
+
+                    <button
+                        type="button"
+                        id="cancel-bookmark-edit"
+                        class="flex-1 border rounded-lg px-4 py-2">
+
+                        Batal
+
+                    </button>
+
+                    <button
+                        type="submit"
+                        class="flex-1 bg-sky-600 text-white rounded-lg px-4 py-2">
+
+                        Simpan
+
+                    </button>
+
+                </div>
+
+            </form>
+
+        </div>
+
+    </div>
+
+
+
+    <!-- =====================================================
+         MODAL DELETE BOOKMARK
+    ====================================================== -->
+
+    <div
+        id="delete-bookmark-modal"
+        class="hidden fixed inset-0 bg-black/50 flex items-center justify-center px-4">
+
+        <div class="bg-white rounded-2xl p-6 w-full max-w-md">
+
+            <h3 class="text-xl font-bold mb-3">
+                Hapus Bookmark
+            </h3>
+
+            <p class="text-slate-600 mb-5">
+                Apakah kamu yakin ingin menghapus bookmark ini?
+            </p>
+
+            <div class="flex gap-2">
+
+                <button
+                    id="cancel-bookmark-delete"
+                    type="button"
+                    class="flex-1 border rounded-lg px-4 py-2">
+
+                    Batal
+
+                </button>
+
+                <button
+                    id="confirm-bookmark-delete"
+                    type="button"
+                    class="flex-1 bg-rose-600 text-white rounded-lg px-4 py-2">
+
+                    Hapus
+
+                </button>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <script src="assets/script.js"></script>
+
+</body>
+</html>
