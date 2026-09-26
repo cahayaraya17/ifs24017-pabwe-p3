@@ -12,7 +12,9 @@
 
 
 /* =========================================================
-   UTILITAS
+   UTILITAS DASAR
+   (diletakkan paling atas agar tidak bergantung pada hoisting
+   saat dipakai oleh fungsi render di bawah)
 ========================================================= */
 
 function $(selector) {
@@ -31,6 +33,23 @@ function formatRupiah(number) {
     }).format(number);
 }
 
+function escapeHTML(value) {
+
+    return String(value)
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+
+}
+
+function escapeAttribute(value) {
+
+    return escapeHTML(value);
+
+}
+
 function shuffleArray(array) {
 
     const result = [...array];
@@ -46,11 +65,18 @@ function shuffleArray(array) {
     return result;
 }
 
+function isValidURL(url) {
+
+    return /^https?:\/\//i.test(url);
+
+}
+
 
 /* =========================================================
    STORAGE HELPER GENERIK
-   (dipakai bareng oleh Expense & Bookmark agar tidak duplikasi
-   logika load/save + try-catch)
+   (dipakai bareng oleh Expense, Bookmark & High Score agar
+   tidak duplikasi logika load/save, dan aman dari kegagalan
+   localStorage misalnya saat storage penuh)
 ========================================================= */
 
 function createStorage(key) {
@@ -75,7 +101,16 @@ function createStorage(key) {
 
         save(data) {
 
-            localStorage.setItem(key, JSON.stringify(data));
+            try {
+
+                localStorage.setItem(key, JSON.stringify(data));
+
+            } catch (error) {
+
+                // localStorage gagal (mis. penuh / mode privat) —
+                // biarkan UI tetap berjalan meski data tidak tersimpan.
+
+            }
 
         }
 
@@ -105,12 +140,6 @@ function validateExpenseInput({ title, category, amount, date }) {
     return null;
 }
 
-function isValidURL(url) {
-
-    return /^https?:\/\//i.test(url);
-
-}
-
 function validateBookmarkInput({ title, url, category }) {
 
     if (!title || !url || !category) {
@@ -127,6 +156,36 @@ function validateBookmarkInput({ title, url, category }) {
 
     return null;
 }
+
+
+/* =========================================================
+   STATE TERPUSAT
+   (satu objek app state, menggantikan banyak variabel global
+   terpisah, supaya lebih mudah dilacak dan dikelola)
+========================================================= */
+
+const appState = {
+
+    expense: {
+        items: [],
+        editingId: null,
+        deletingId: null
+    },
+
+    bookmark: {
+        items: [],
+        editingId: null,
+        deletingId: null
+    },
+
+    quiz: {
+        activeQuestions: [],
+        currentQuestion: 0,
+        score: 0,
+        answered: false
+    }
+
+};
 
 
 /* =========================================================
@@ -257,10 +316,7 @@ switchTab(getTabFromURL(), { updateURL: true, method: "replace" });
 
 const expenseStorage = createStorage("pabwe-p3-expenses");
 
-let expenses = expenseStorage.load();
-
-let editingExpenseId = null;
-let deletingExpenseId = null;
+appState.expense.items = expenseStorage.load();
 
 
 /* ---------- DOM Expense ---------- */
@@ -307,7 +363,7 @@ function updateExpenseSummary() {
     let income = 0;
     let expense = 0;
 
-    expenses.forEach((item) => {
+    appState.expense.items.forEach((item) => {
 
         if (item.type === "Pemasukan") {
 
@@ -351,7 +407,7 @@ function renderExpenses() {
         expenseSort.value;
 
 
-    let items = expenses.filter((item) => {
+    let items = appState.expense.items.filter((item) => {
 
         const matchesSearch =
             item.title
@@ -397,7 +453,7 @@ function renderExpenses() {
     expenseList.innerHTML = "";
 
 
-    if (expenses.length === 0) {
+    if (appState.expense.items.length === 0) {
 
         expenseEmpty.classList.remove("hidden");
 
@@ -559,9 +615,9 @@ expenseForm.addEventListener("submit", (event) => {
     };
 
 
-    expenses.push(newExpense);
+    appState.expense.items.push(newExpense);
 
-    expenseStorage.save(expenses);
+    expenseStorage.save(appState.expense.items);
 
     renderExpenses();
 
@@ -612,7 +668,7 @@ expenseList.addEventListener("click", (event) => {
 
     if (deleteButton) {
 
-        deletingExpenseId =
+        appState.expense.deletingId =
             Number(deleteButton.dataset.id);
 
         deleteExpenseModal.classList.remove(
@@ -629,7 +685,7 @@ expenseList.addEventListener("click", (event) => {
 function openExpenseEdit(id) {
 
     const item =
-        expenses.find(
+        appState.expense.items.find(
             (expense) => expense.id === id
         );
 
@@ -639,7 +695,7 @@ function openExpenseEdit(id) {
     }
 
 
-    editingExpenseId = id;
+    appState.expense.editingId = id;
 
     editExpenseId.value = id;
 
@@ -702,9 +758,9 @@ expenseEditForm.addEventListener(
 
 
         const item =
-            expenses.find(
+            appState.expense.items.find(
                 (expense) =>
-                    expense.id === editingExpenseId
+                    expense.id === appState.expense.editingId
             );
 
 
@@ -719,7 +775,7 @@ expenseEditForm.addEventListener(
         }
 
 
-        expenseStorage.save(expenses);
+        expenseStorage.save(appState.expense.items);
 
         renderExpenses();
 
@@ -754,7 +810,7 @@ $("#cancel-expense-delete")
             "hidden"
         );
 
-        deletingExpenseId = null;
+        appState.expense.deletingId = null;
 
     });
 
@@ -762,14 +818,14 @@ $("#cancel-expense-delete")
 $("#confirm-expense-delete")
     .addEventListener("click", () => {
 
-        expenses =
-            expenses.filter(
+        appState.expense.items =
+            appState.expense.items.filter(
                 (item) =>
-                    item.id !== deletingExpenseId
+                    item.id !== appState.expense.deletingId
             );
 
 
-        expenseStorage.save(expenses);
+        expenseStorage.save(appState.expense.items);
 
         renderExpenses();
 
@@ -780,7 +836,7 @@ $("#confirm-expense-delete")
             "hidden"
         );
 
-        deletingExpenseId = null;
+        appState.expense.deletingId = null;
 
     });
 
@@ -792,10 +848,7 @@ $("#confirm-expense-delete")
 
 const bookmarkStorage = createStorage("pabwe-p3-bookmarks");
 
-let bookmarks = bookmarkStorage.load();
-
-let editingBookmarkId = null;
-let deletingBookmarkId = null;
+appState.bookmark.items = bookmarkStorage.load();
 
 
 /* ---------- DOM Bookmark ---------- */
@@ -867,7 +920,7 @@ function renderBookmarks() {
 
 
     let items =
-        bookmarks.filter((item) => {
+        appState.bookmark.items.filter((item) => {
 
             return (
                 item.title
@@ -914,7 +967,7 @@ function renderBookmarks() {
     bookmarkList.innerHTML = "";
 
 
-    if (bookmarks.length === 0) {
+    if (appState.bookmark.items.length === 0) {
 
         bookmarkEmpty.classList.remove(
             "hidden"
@@ -1079,9 +1132,9 @@ bookmarkForm.addEventListener(
         };
 
 
-        bookmarks.push(newBookmark);
+        appState.bookmark.items.push(newBookmark);
 
-        bookmarkStorage.save(bookmarks);
+        bookmarkStorage.save(appState.bookmark.items);
 
         renderBookmarks();
 
@@ -1132,7 +1185,7 @@ bookmarkList.addEventListener(
 
         if (deleteButton) {
 
-            deletingBookmarkId =
+            appState.bookmark.deletingId =
                 Number(deleteButton.dataset.id);
 
             deleteBookmarkModal.classList.remove(
@@ -1150,7 +1203,7 @@ bookmarkList.addEventListener(
 function openBookmarkEdit(id) {
 
     const item =
-        bookmarks.find(
+        appState.bookmark.items.find(
             (bookmark) =>
                 bookmark.id === id
         );
@@ -1161,7 +1214,7 @@ function openBookmarkEdit(id) {
     }
 
 
-    editingBookmarkId = id;
+    appState.bookmark.editingId = id;
 
     editBookmarkTitle.value =
         item.title;
@@ -1216,9 +1269,9 @@ bookmarkEditForm.addEventListener(
 
 
         const item =
-            bookmarks.find(
+            appState.bookmark.items.find(
                 (bookmark) =>
-                    bookmark.id === editingBookmarkId
+                    bookmark.id === appState.bookmark.editingId
             );
 
 
@@ -1232,7 +1285,7 @@ bookmarkEditForm.addEventListener(
         }
 
 
-        bookmarkStorage.save(bookmarks);
+        bookmarkStorage.save(appState.bookmark.items);
 
         renderBookmarks();
 
@@ -1265,7 +1318,7 @@ $("#cancel-bookmark-delete")
             "hidden"
         );
 
-        deletingBookmarkId = null;
+        appState.bookmark.deletingId = null;
 
     });
 
@@ -1275,15 +1328,15 @@ $("#confirm-bookmark-delete")
         "click",
         () => {
 
-            bookmarks =
-                bookmarks.filter(
+            appState.bookmark.items =
+                appState.bookmark.items.filter(
                     (item) =>
                         item.id !==
-                        deletingBookmarkId
+                        appState.bookmark.deletingId
                 );
 
 
-            bookmarkStorage.save(bookmarks);
+            bookmarkStorage.save(appState.bookmark.items);
 
             renderBookmarks();
 
@@ -1292,7 +1345,7 @@ $("#confirm-bookmark-delete")
                 "hidden"
             );
 
-            deletingBookmarkId = null;
+            appState.bookmark.deletingId = null;
 
         }
     );
@@ -1415,13 +1468,6 @@ function getShuffledQuestions() {
 }
 
 
-let activeQuestions = questions;
-
-let currentQuestion = 0;
-let quizScore = 0;
-let answered = false;
-
-
 /* ---------- DOM Quiz ---------- */
 
 const quizStart =
@@ -1471,11 +1517,35 @@ const highScoreResult =
 
 function getHighScore() {
 
-    return Number(
-        localStorage.getItem(
-            QUIZ_HIGH_SCORE_KEY
-        ) || 0
-    );
+    const raw =
+        localStorage.getItem(QUIZ_HIGH_SCORE_KEY);
+
+    const parsed = Number(raw);
+
+    // Validasi eksplisit: pastikan hasil parse berupa angka valid
+    // dan tidak negatif, jika tidak fallback ke 0.
+    return Number.isFinite(parsed) && parsed >= 0
+        ? parsed
+        : 0;
+
+}
+
+
+function saveHighScore(score) {
+
+    try {
+
+        localStorage.setItem(
+            QUIZ_HIGH_SCORE_KEY,
+            String(score)
+        );
+
+    } catch (error) {
+
+        // localStorage gagal (mis. penuh / mode privat) —
+        // biarkan UI tetap berjalan meski high score tidak tersimpan.
+
+    }
 
 }
 
@@ -1498,14 +1568,14 @@ function updateHighScoreDisplay() {
 
 function startQuizGame() {
 
-    activeQuestions =
+    appState.quiz.activeQuestions =
         getShuffledQuestions();
 
-    currentQuestion = 0;
+    appState.quiz.currentQuestion = 0;
 
-    quizScore = 0;
+    appState.quiz.score = 0;
 
-    answered = false;
+    appState.quiz.answered = false;
 
 
     quizStart.classList.add("hidden");
@@ -1538,18 +1608,18 @@ restartQuiz.addEventListener(
 function renderQuestion() {
 
     const question =
-        activeQuestions[currentQuestion];
+        appState.quiz.activeQuestions[appState.quiz.currentQuestion];
 
 
-    answered = false;
+    appState.quiz.answered = false;
 
 
     quizNumber.textContent =
-        `Soal ${currentQuestion + 1} / ${activeQuestions.length}`;
+        `Soal ${appState.quiz.currentQuestion + 1} / ${appState.quiz.activeQuestions.length}`;
 
 
     quizScoreElement.textContent =
-        `Skor: ${quizScore}`;
+        `Skor: ${appState.quiz.score}`;
 
 
     questionText.textContent =
@@ -1604,16 +1674,16 @@ function renderQuestion() {
 
 function selectAnswer(selectedIndex) {
 
-    if (answered) {
+    if (appState.quiz.answered) {
         return;
     }
 
 
-    answered = true;
+    appState.quiz.answered = true;
 
 
     const question =
-        activeQuestions[currentQuestion];
+        appState.quiz.activeQuestions[appState.quiz.currentQuestion];
 
 
     const buttons =
@@ -1636,7 +1706,7 @@ function selectAnswer(selectedIndex) {
         question.answer
     ) {
 
-        quizScore++;
+        appState.quiz.score++;
 
         quizFeedback.textContent =
             "Benar! Jawaban kamu tepat.";
@@ -1656,7 +1726,7 @@ function selectAnswer(selectedIndex) {
 
 
     quizScoreElement.textContent =
-        `Skor: ${quizScore}`;
+        `Skor: ${appState.quiz.score}`;
 
 
     nextQuestion.classList.remove(
@@ -1672,12 +1742,12 @@ nextQuestion.addEventListener(
     "click",
     () => {
 
-        currentQuestion++;
+        appState.quiz.currentQuestion++;
 
 
         if (
-            currentQuestion >=
-            activeQuestions.length
+            appState.quiz.currentQuestion >=
+            appState.quiz.activeQuestions.length
         ) {
 
             finishQuiz();
@@ -1707,47 +1777,21 @@ function finishQuiz() {
 
 
     finalScore.textContent =
-        `${quizScore} / ${activeQuestions.length}`;
+        `${appState.quiz.score} / ${appState.quiz.activeQuestions.length}`;
 
 
     const oldHighScore =
         getHighScore();
 
 
-    if (quizScore > oldHighScore) {
+    if (appState.quiz.score > oldHighScore) {
 
-        localStorage.setItem(
-            QUIZ_HIGH_SCORE_KEY,
-            quizScore
-        );
+        saveHighScore(appState.quiz.score);
 
     }
 
 
     updateHighScoreDisplay();
-
-}
-
-
-/* =========================================================
-   KEAMANAN OUTPUT HTML
-========================================================= */
-
-function escapeHTML(value) {
-
-    return String(value)
-        .replaceAll("&", "&amp;")
-        .replaceAll("<", "&lt;")
-        .replaceAll(">", "&gt;")
-        .replaceAll('"', "&quot;")
-        .replaceAll("'", "&#039;");
-
-}
-
-
-function escapeAttribute(value) {
-
-    return escapeHTML(value);
 
 }
 
