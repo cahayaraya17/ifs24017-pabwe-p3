@@ -239,7 +239,7 @@ function switchTab(tabName, { updateURL = true, method = "push" } = {}) {
         );
 
         button.classList.toggle(
-            "bg-sky-600",
+            "bg-sky-700",
             active
         );
 
@@ -257,6 +257,9 @@ function switchTab(tabName, { updateURL = true, method = "push" } = {}) {
             "text-slate-600",
             !active
         );
+
+        // Roving tabindex sesuai pola ARIA tabs
+        button.tabIndex = active ? 0 : -1;
 
     });
 

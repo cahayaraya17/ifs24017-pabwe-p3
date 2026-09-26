@@ -6,6 +6,10 @@
 
     <title>Praktikum 3 - JavaScript</title>
 
+    <meta
+        name="description"
+        content="Aplikasi Praktikum JavaScript: Expense Tracker, Bookmark Manager, dan Quiz App interaktif untuk mengelola keuangan harian, menyimpan tautan favorit, serta menguji pengetahuan dasar web development.">
+
     <script src="https://cdn.tailwindcss.com"></script>
 
     <style>
@@ -21,7 +25,7 @@
 
 <body class="text-slate-800">
 
-    <header class="bg-sky-600 text-white">
+    <header class="bg-sky-700 text-white">
         <div class="max-w-6xl mx-auto px-4 py-6">
             <h1 class="text-3xl font-bold">
                 Praktikum JavaScript
@@ -36,29 +40,44 @@
     <main class="max-w-6xl mx-auto px-4 py-8">
 
         <!-- TAB NAVIGATION -->
-        <div class="flex flex-wrap gap-2 mb-6">
+        <div
+            class="flex flex-wrap gap-2 mb-6"
+            role="tablist"
+            aria-label="Navigasi fitur">
 
             <button
                 type="button"
-                class="tab-btn px-4 py-2 rounded-lg bg-sky-600 text-white font-semibold"
+                id="tab-expense"
+                class="tab-btn px-4 py-2 rounded-lg bg-sky-700 text-white font-semibold"
                 data-tab="expense"
-                aria-selected="true">
+                role="tab"
+                aria-selected="true"
+                aria-controls="panel-expense"
+                tabindex="0">
                 Expense Tracker
             </button>
 
             <button
                 type="button"
+                id="tab-bookmark"
                 class="tab-btn px-4 py-2 rounded-lg bg-white text-slate-600 font-semibold border"
                 data-tab="bookmark"
-                aria-selected="false">
+                role="tab"
+                aria-selected="false"
+                aria-controls="panel-bookmark"
+                tabindex="-1">
                 Bookmark Manager
             </button>
 
             <button
                 type="button"
+                id="tab-quiz"
                 class="tab-btn px-4 py-2 rounded-lg bg-white text-slate-600 font-semibold border"
                 data-tab="quiz"
-                aria-selected="false">
+                role="tab"
+                aria-selected="false"
+                aria-controls="panel-quiz"
+                tabindex="-1">
                 Quiz App
             </button>
 
@@ -69,7 +88,11 @@
              EXPENSE TRACKER
         ====================================================== -->
 
-        <section id="panel-expense" class="bg-white rounded-2xl shadow p-6">
+        <section
+            id="panel-expense"
+            role="tabpanel"
+            aria-labelledby="tab-expense"
+            class="bg-white rounded-2xl shadow p-6">
 
             <div class="mb-6">
                 <h2 class="text-2xl font-bold">
@@ -134,7 +157,7 @@
                 class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
 
                 <div>
-                    <label class="block text-sm font-semibold mb-1">
+                    <label for="expense-title" class="block text-sm font-semibold mb-1">
                         Judul / Deskripsi
                     </label>
 
@@ -148,7 +171,7 @@
 
 
                 <div>
-                    <label class="block text-sm font-semibold mb-1">
+                    <label for="expense-category" class="block text-sm font-semibold mb-1">
                         Kategori
                     </label>
 
@@ -186,7 +209,7 @@
 
 
                 <div>
-                    <label class="block text-sm font-semibold mb-1">
+                    <label for="expense-amount" class="block text-sm font-semibold mb-1">
                         Jumlah
                     </label>
 
@@ -201,7 +224,7 @@
 
 
                 <div>
-                    <label class="block text-sm font-semibold mb-1">
+                    <label for="expense-type" class="block text-sm font-semibold mb-1">
                         Tipe
                     </label>
 
@@ -223,7 +246,7 @@
 
 
                 <div>
-                    <label class="block text-sm font-semibold mb-1">
+                    <label for="expense-date" class="block text-sm font-semibold mb-1">
                         Tanggal
                     </label>
 
@@ -239,7 +262,7 @@
 
                     <button
                         type="submit"
-                        class="w-full bg-sky-600 hover:bg-sky-700 text-white font-semibold rounded-lg px-4 py-2">
+                        class="w-full bg-sky-700 hover:bg-sky-800 text-white font-semibold rounded-lg px-4 py-2">
 
                         Tambah Transaksi
 
@@ -254,53 +277,71 @@
 
             <div class="grid grid-cols-1 md:grid-cols-3 gap-3 mb-5">
 
-                <input
-                    type="search"
-                    id="expense-search"
-                    class="border rounded-lg px-3 py-2"
-                    placeholder="Cari transaksi...">
+                <div>
+                    <label for="expense-search" class="sr-only">
+                        Cari transaksi
+                    </label>
+
+                    <input
+                        type="search"
+                        id="expense-search"
+                        class="w-full border rounded-lg px-3 py-2"
+                        placeholder="Cari transaksi...">
+                </div>
 
 
-                <select
-                    id="expense-filter-type"
-                    class="border rounded-lg px-3 py-2">
+                <div>
+                    <label for="expense-filter-type" class="sr-only">
+                        Filter tipe transaksi
+                    </label>
 
-                    <option value="Semua">
-                        Semua Tipe
-                    </option>
+                    <select
+                        id="expense-filter-type"
+                        class="w-full border rounded-lg px-3 py-2">
 
-                    <option value="Pemasukan">
-                        Pemasukan
-                    </option>
+                        <option value="Semua">
+                            Semua Tipe
+                        </option>
 
-                    <option value="Pengeluaran">
-                        Pengeluaran
-                    </option>
+                        <option value="Pemasukan">
+                            Pemasukan
+                        </option>
 
-                </select>
+                        <option value="Pengeluaran">
+                            Pengeluaran
+                        </option>
+
+                    </select>
+                </div>
 
 
-                <select
-                    id="expense-sort"
-                    class="border rounded-lg px-3 py-2">
+                <div>
+                    <label for="expense-sort" class="sr-only">
+                        Urutkan transaksi
+                    </label>
 
-                    <option value="newest">
-                        Terbaru
-                    </option>
+                    <select
+                        id="expense-sort"
+                        class="w-full border rounded-lg px-3 py-2">
 
-                    <option value="oldest">
-                        Terlama
-                    </option>
+                        <option value="newest">
+                            Terbaru
+                        </option>
 
-                    <option value="highest">
-                        Jumlah Terbesar
-                    </option>
+                        <option value="oldest">
+                            Terlama
+                        </option>
 
-                    <option value="lowest">
-                        Jumlah Terkecil
-                    </option>
+                        <option value="highest">
+                            Jumlah Terbesar
+                        </option>
 
-                </select>
+                        <option value="lowest">
+                            Jumlah Terkecil
+                        </option>
+
+                    </select>
+                </div>
 
             </div>
 
@@ -330,6 +371,8 @@
 
         <section
             id="panel-bookmark"
+            role="tabpanel"
+            aria-labelledby="tab-bookmark"
             class="hidden bg-white rounded-2xl shadow p-6">
 
             <div class="mb-6">
@@ -353,7 +396,7 @@
 
                 <div>
 
-                    <label class="block text-sm font-semibold mb-1">
+                    <label for="bookmark-title" class="block text-sm font-semibold mb-1">
                         Nama / Judul
                     </label>
 
@@ -369,7 +412,7 @@
 
                 <div>
 
-                    <label class="block text-sm font-semibold mb-1">
+                    <label for="bookmark-url" class="block text-sm font-semibold mb-1">
                         URL
                     </label>
 
@@ -385,7 +428,7 @@
 
                 <div>
 
-                    <label class="block text-sm font-semibold mb-1">
+                    <label for="bookmark-category" class="block text-sm font-semibold mb-1">
                         Kategori / Tag
                     </label>
 
@@ -401,7 +444,7 @@
 
                 <div>
 
-                    <label class="block text-sm font-semibold mb-1">
+                    <label for="bookmark-note" class="block text-sm font-semibold mb-1">
                         Catatan
                     </label>
 
@@ -418,7 +461,7 @@
 
                     <button
                         type="submit"
-                        class="w-full bg-sky-600 hover:bg-sky-700 text-white font-semibold rounded-lg px-4 py-2">
+                        class="w-full bg-sky-700 hover:bg-sky-800 text-white font-semibold rounded-lg px-4 py-2">
 
                         Tambah Bookmark
 
@@ -433,30 +476,42 @@
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-3 mb-5">
 
-                <input
-                    type="search"
-                    id="bookmark-search"
-                    class="border rounded-lg px-3 py-2"
-                    placeholder="Cari nama, URL, atau kategori...">
+                <div>
+                    <label for="bookmark-search" class="sr-only">
+                        Cari bookmark
+                    </label>
+
+                    <input
+                        type="search"
+                        id="bookmark-search"
+                        class="w-full border rounded-lg px-3 py-2"
+                        placeholder="Cari nama, URL, atau kategori...">
+                </div>
 
 
-                <select
-                    id="bookmark-sort"
-                    class="border rounded-lg px-3 py-2">
+                <div>
+                    <label for="bookmark-sort" class="sr-only">
+                        Urutkan bookmark
+                    </label>
 
-                    <option value="newest">
-                        Terbaru
-                    </option>
+                    <select
+                        id="bookmark-sort"
+                        class="w-full border rounded-lg px-3 py-2">
 
-                    <option value="title-asc">
-                        Judul A-Z
-                    </option>
+                        <option value="newest">
+                            Terbaru
+                        </option>
 
-                    <option value="title-desc">
-                        Judul Z-A
-                    </option>
+                        <option value="title-asc">
+                            Judul A-Z
+                        </option>
 
-                </select>
+                        <option value="title-desc">
+                            Judul Z-A
+                        </option>
+
+                    </select>
+                </div>
 
             </div>
 
@@ -482,6 +537,8 @@
 
         <section
             id="panel-quiz"
+            role="tabpanel"
+            aria-labelledby="tab-quiz"
             class="hidden bg-white rounded-2xl shadow p-6">
 
             <div class="mb-6">
@@ -508,7 +565,7 @@
                 <button
                     id="start-quiz"
                     type="button"
-                    class="bg-sky-600 hover:bg-sky-700 text-white font-semibold rounded-lg px-6 py-3">
+                    class="bg-sky-700 hover:bg-sky-800 text-white font-semibold rounded-lg px-6 py-3">
 
                     Mulai Kuis
 
@@ -568,7 +625,7 @@
                 <button
                     id="next-question"
                     type="button"
-                    class="hidden mt-5 bg-sky-600 text-white px-5 py-2 rounded-lg">
+                    class="hidden mt-5 bg-sky-700 hover:bg-sky-800 text-white px-5 py-2 rounded-lg">
 
                     Soal Berikutnya
 
@@ -609,7 +666,7 @@
                 <button
                     id="restart-quiz"
                     type="button"
-                    class="mt-5 bg-sky-600 hover:bg-sky-700 text-white font-semibold rounded-lg px-6 py-3">
+                    class="mt-5 bg-sky-700 hover:bg-sky-800 text-white font-semibold rounded-lg px-6 py-3">
 
                     Main Lagi
 
@@ -646,7 +703,7 @@
 
                 <div class="mb-3">
 
-                    <label class="block text-sm font-semibold mb-1">
+                    <label for="edit-expense-title" class="block text-sm font-semibold mb-1">
                         Judul
                     </label>
 
@@ -661,7 +718,7 @@
 
                 <div class="mb-3">
 
-                    <label class="block text-sm font-semibold mb-1">
+                    <label for="edit-expense-category" class="block text-sm font-semibold mb-1">
                         Kategori
                     </label>
 
@@ -683,7 +740,7 @@
 
                 <div class="mb-3">
 
-                    <label class="block text-sm font-semibold mb-1">
+                    <label for="edit-expense-amount" class="block text-sm font-semibold mb-1">
                         Jumlah
                     </label>
 
@@ -699,7 +756,7 @@
 
                 <div class="mb-3">
 
-                    <label class="block text-sm font-semibold mb-1">
+                    <label for="edit-expense-type" class="block text-sm font-semibold mb-1">
                         Tipe
                     </label>
 
@@ -722,7 +779,7 @@
 
                 <div class="mb-4">
 
-                    <label class="block text-sm font-semibold mb-1">
+                    <label for="edit-expense-date" class="block text-sm font-semibold mb-1">
                         Tanggal
                     </label>
 
@@ -748,7 +805,7 @@
 
                     <button
                         type="submit"
-                        class="flex-1 bg-sky-600 text-white rounded-lg px-4 py-2">
+                        class="flex-1 bg-sky-700 hover:bg-sky-800 text-white rounded-lg px-4 py-2">
 
                         Simpan
 
@@ -826,10 +883,9 @@
 
             <form id="bookmark-edit-form">
 
-                <input
-                    type="hidden"
-                    id="edit-bookmark-id">
-
+                <label for="edit-bookmark-title" class="sr-only">
+                    Judul bookmark
+                </label>
 
                 <input
                     type="text"
@@ -839,6 +895,10 @@
                     required>
 
 
+                <label for="edit-bookmark-url" class="sr-only">
+                    URL bookmark
+                </label>
+
                 <input
                     type="url"
                     id="edit-bookmark-url"
@@ -847,6 +907,10 @@
                     required>
 
 
+                <label for="edit-bookmark-category" class="sr-only">
+                    Kategori bookmark
+                </label>
+
                 <input
                     type="text"
                     id="edit-bookmark-category"
@@ -854,6 +918,10 @@
                     placeholder="Kategori"
                     required>
 
+
+                <label for="edit-bookmark-note" class="sr-only">
+                    Catatan bookmark
+                </label>
 
                 <input
                     type="text"
@@ -875,7 +943,7 @@
 
                     <button
                         type="submit"
-                        class="flex-1 bg-sky-600 text-white rounded-lg px-4 py-2">
+                        class="flex-1 bg-sky-700 hover:bg-sky-800 text-white rounded-lg px-4 py-2">
 
                         Simpan
 
